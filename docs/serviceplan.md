@@ -8,7 +8,7 @@
 - **product-service**: Product listing, search (integrated with Elasticsearch)
 - **cart-service**: Cart operations stored in Redis
 - **order-service**: Order placement, order history
-- **payment-service**: Dummy payment flow 
+- **payment-service**: Dummy payment flow (later real gateway)
 - **review-service**: Ratings and product reviews
 
 ## 🔀 Supporting Services
