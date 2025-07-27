@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: test-route
+          uri: https://httpbin.org/get
+          predicates:
+            - Path=/test
