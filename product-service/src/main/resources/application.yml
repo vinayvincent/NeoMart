@@ -3,10 +3,12 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/neomart
-    username: neomart
-    password: password
+    url: jdbc:postgresql://postgres:5432/neomart_db
+    username: neomart_user
+    password: neomart_pass
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+  application:
+    name: product-service
