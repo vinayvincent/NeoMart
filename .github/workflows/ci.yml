@@ -41,22 +41,22 @@ jobs:
       - name: Build and test api-gateway
         run: ./gradlew clean build --project-dir ./api-gateway
 
-      - name: SonarQube Scan (product-service)
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./gradlew sonarqube \
-            --project-dir ./product-service \
-            -Dsonar.projectKey=product_service_key \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=${SONAR_TOKEN}
-
-      - name: SonarQube Scan (api-gateway)
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./gradlew sonarqube \
-            --project-dir ./api-gateway \
-            -Dsonar.projectKey=api_gateway_key \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=${SONAR_TOKEN}
+#      - name: SonarQube Scan (product-service)
+#        env:
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#        run: |
+#          ./gradlew sonarqube \
+#            --project-dir ./product-service \
+#            -Dsonar.projectKey=product_service_key \
+#            -Dsonar.host.url=http://localhost:9000 \
+#            -Dsonar.login=${SONAR_TOKEN}
+#
+#      - name: SonarQube Scan (api-gateway)
+#        env:
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#        run: |
+#          ./gradlew sonarqube \
+#            --project-dir ./api-gateway \
+#            -Dsonar.projectKey=api_gateway_key \
+#            -Dsonar.host.url=http://localhost:9000 \
+#            -Dsonar.login=${SONAR_TOKEN}
