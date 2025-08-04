@@ -1,4 +1,4 @@
-# NeoMart Microservices Architecture Plan
+# NeoMart 
 
 ## 🔑 Core Microservices
 
