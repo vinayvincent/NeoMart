@@ -35,12 +35,25 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Build and test auth-service
+        run: ./gradlew clean build --project-dir ./auth-service
+
       - name: Build and test product-service
         run: ./gradlew clean build --project-dir ./product-service
 
       - name: Build and test api-gateway
         run: ./gradlew clean build --project-dir ./api-gateway
 
+#      - name: SonarQube Scan (auth-service)
+#        env:
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#        run: |
+#          ./gradlew sonarqube \
+#            --project-dir ./auth-service \
+#            -Dsonar.projectKey=auth_service_key \
+#            -Dsonar.host.url=http://localhost:9000 \
+#            -Dsonar.login=${SONAR_TOKEN}
+#
 #      - name: SonarQube Scan (product-service)
 #        env:
 #          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
