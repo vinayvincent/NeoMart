@@ -12,13 +12,28 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/neomart_db
+      SPRING_DATASOURCE_USERNAME: neomart_user
+      SPRING_DATASOURCE_PASSWORD: neomart_pass
+      JWT_SECRET: your-super-secret-jwt-key-for-development-only-change-in-production
+      GOOGLE_CLIENT_ID: your-google-client-id
+      GOOGLE_CLIENT_SECRET: your-google-client-secret
+    depends_on:
+      - postgres
+
   product-service:
     build: ./product-service
     container_name: product-service
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://neomart-postgres:5432/neomart_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/neomart_db
       SPRING_DATASOURCE_USERNAME: neomart_user
       SPRING_DATASOURCE_PASSWORD: neomart_pass
     depends_on:
@@ -30,6 +45,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - auth-service
       - product-service
 
   sonarqube:

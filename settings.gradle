@@ -11,4 +11,4 @@ plugins {
 }
 
 rootProject.name = 'NeoMart1'
-include('app', 'product-service', 'api-gateway')
+include('auth-service', 'product-service', 'api-gateway')
