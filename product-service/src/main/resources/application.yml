@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/neomart_db
+    url: jdbc:postgresql://localhost:5432/neomart_db
     username: neomart_user
     password: neomart_pass
   jpa:

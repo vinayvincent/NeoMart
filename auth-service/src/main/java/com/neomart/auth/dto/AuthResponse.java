@@ -1,23 +1,24 @@
 package com.neomart.auth.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
-    private String token;
-    private String type = "Bearer";
-    private String username;
-    private String email;
-    private String role;
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType = "Bearer";
+    private Long expiresIn;
+    private UserInfo user;
     
-    public AuthResponse(String token, String username, String email, String role) {
-        this.token = token;
-        this.username = username;
-        this.email = email;
-        this.role = role;
+    @Data
+    @AllArgsConstructor
+    public static class UserInfo {
+        private Long id;
+        private String username;
+        private String email;
+        private String firstName;
+        private String lastName;
     }
-} 
+}

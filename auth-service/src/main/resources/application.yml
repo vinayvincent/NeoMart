@@ -4,12 +4,12 @@ server:
 spring:
   application:
     name: auth-service
-  
+
   datasource:
-    url: jdbc:postgresql://postgres:5432/neomart_db
+    url: jdbc:postgresql://localhost:5432/neomart_db
     username: neomart_user
     password: neomart_pass
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -26,12 +26,27 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
             client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
             scope:
+              - openid
               - email
               - profile
+          microsoft:
+            client-id: ${MICROSOFT_CLIENT_ID:your-microsoft-client-id}
+            client-secret: ${MICROSOFT_CLIENT_SECRET:your-microsoft-client-secret}
+            scope:
+              - openid
+              - email
+              - profile
+        provider:
+          microsoft:
+            authorization-uri: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+            token-uri: https://login.microsoftonline.com/common/oauth2/v2.0/token
+            user-info-uri: https://graph.microsoft.com/v1.0/me
+            user-name-attribute: id
 
 jwt:
   secret: ${JWT_SECRET:your-super-secret-jwt-key-for-development-only-change-in-production}
   expiration: 86400000  # 24 hours in milliseconds
+  refresh-expiration: 604800000 # 7 days
 
 logging:
   level:

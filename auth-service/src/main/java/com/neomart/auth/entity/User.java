@@ -1,16 +1,18 @@
 package com.neomart.auth.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -20,55 +22,89 @@ import java.util.UUID;
 public class User implements UserDetails {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 50)
     private String username;
     
-    @Column(nullable = false)
-    private String password;
-    
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
     
+    @Column(name = "password_hash")
+    private String passwordHash;
+    
+    @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;
+    
+    @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
     
-    @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    @Column(length = 20)
+    private String phone;
     
-    private boolean enabled = true;
-    private boolean accountNonExpired = true;
-    private boolean accountNonLocked = true;
-    private boolean credentialsNonExpired = true;
+    @Column(name = "is_active")
+    private Boolean isActive = true;
     
-    public enum Role {
-        USER, ADMIN
+    @Column(name = "is_email_verified")
+    private Boolean isEmailVerified = false;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+    
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+    
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts = 0;
+    
+    @Column(name = "account_locked_until")
+    private LocalDateTime accountLockedUntil;
+    
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles;
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<UserOAuthConnection> oauthConnections;
+    
+    // UserDetails implementation
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .collect(Collectors.toList());
     }
     
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    public String getPassword() {
+        return passwordHash;
     }
     
     @Override
     public boolean isAccountNonExpired() {
-        return accountNonExpired;
+        return true;
     }
     
     @Override
     public boolean isAccountNonLocked() {
-        return accountNonLocked;
+        return accountLockedUntil == null || accountLockedUntil.isBefore(LocalDateTime.now());
     }
     
     @Override
     public boolean isCredentialsNonExpired() {
-        return credentialsNonExpired;
+        return true;
     }
     
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return isActive;
     }
-} 
+}

@@ -3,75 +3,91 @@ package com.neomart.auth.service;
 import com.neomart.auth.dto.AuthResponse;
 import com.neomart.auth.dto.LoginRequest;
 import com.neomart.auth.dto.RegisterRequest;
+import com.neomart.auth.entity.Role;
 import com.neomart.auth.entity.User;
+import com.neomart.auth.repository.RoleRepository;
 import com.neomart.auth.repository.UserRepository;
-import com.neomart.auth.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    public AuthResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-        );
-
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(userDetails, userDetails.getUsername());
-        
-        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        
-        return new AuthResponse(
-                token,
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole().name()
-        );
-    }
-
-    public AuthResponse register(RegisterRequest registerRequest) {
-        if (userRepository.existsByUsername(registerRequest.getUsername())) {
+    
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
-
-        if (userRepository.existsByEmail(registerRequest.getEmail())) {
+        
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
-
+        
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+        
         User user = new User();
-        user.setUsername(registerRequest.getUsername());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setEmail(registerRequest.getEmail());
-        user.setFirstName(registerRequest.getFirstName());
-        user.setLastName(registerRequest.getLastName());
-        user.setRole(User.Role.USER);
-
-        User savedUser = userRepository.save(user);
-        String token = jwtUtil.generateToken(savedUser, savedUser.getEmail());
-
-        return new AuthResponse(
-                token,
-                savedUser.getUsername(),
-                savedUser.getEmail(),
-                savedUser.getRole().name()
-        );
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhone(request.getPhone());
+        user.setRoles(Set.of(userRole));
+        
+        user = userRepository.save(user);
+        
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+        
+        return createAuthResponse(user, accessToken, refreshToken);
     }
-} 
+    
+    public AuthResponse login(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
+        );
+        
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Update last login
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setFailedLoginAttempts(0);
+        userRepository.save(user);
+        
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+        
+        return createAuthResponse(user, accessToken, refreshToken);
+    }
+    
+    private AuthResponse createAuthResponse(User user, String accessToken, String refreshToken) {
+        AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName()
+        );
+        
+        return new AuthResponse(accessToken, refreshToken, "Bearer", 86400L, userInfo);
+    }
+}
